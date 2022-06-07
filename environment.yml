@@ -1,0 +1,22 @@
+name: roads
+channels:
+  - pytorch
+  - conda-forge
+  - defaults
+dependencies:
+  - python
+  - https://anaconda.org/pytorch::pytorch
+  - https://anaconda.org/pytorch::torchvision
+  - numpy
+  - https://conda.anaconda.org/menpo::opencv3
+  - matplotlib
+  - pillow
+  - pip
+  - pytest
+  - scikit-image
+  - scipy
+  - setuptools
+  - pip:
+    - dvc
+    - mlflow
+
