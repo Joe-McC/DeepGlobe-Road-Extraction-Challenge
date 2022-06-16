@@ -1,21 +1,16 @@
 name: roads
 channels:
-  - pytorch
   - conda-forge
   - defaults
 dependencies:
-  - python
-  - https://anaconda.org/pytorch::pytorch
-  - https://anaconda.org/pytorch::torchvision
-  - numpy
-  - https://conda.anaconda.org/menpo::opencv3
+  - python=3.7
+  - pytorch=1.8
+  - cudatoolkit=10.2
+  - torchvision
   - matplotlib
-  - pillow
+  - numpy
   - pip
-  - pytest
-  - scikit-image
-  - scipy
-  - setuptools
+  - py-opencv=3.4.9
   - pip:
     - dvc
     - mlflow
