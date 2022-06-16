@@ -1,11 +1,17 @@
 import torch
 import torch.nn as nn
 import torch.utils.data as data
+import torchvision
+import glob
+#from torchvision.datasets import ImageFolder
+
 from torch.autograd import Variable as V
 
 import cv2
 import os
 import numpy as np
+from pathlib import Path
+import pathlib
 
 from time import time
 from datetime import datetime
@@ -18,23 +24,34 @@ from loss import dice_bce_loss
 from data import ImageFolder
 
 SHAPE = (1024,1024)
-ROOT = 'dataset/train/'
-imagelist = filter(lambda x: x.find('sat')!=-1, os.listdir(ROOT))
-trainlist = map(lambda x: x[:-8], imagelist)
+#current_dir = 
+data_dir = Path('dataset/train/')
+#print('data_dir',data_dir)
+imagelist = filter(lambda x: x.find('sat')!=-1, os.listdir(str(data_dir)))
+#print('imagelist',imagelist[0])
+#imagelist = glob.glob('dataset/train/*sat.jpg')
+#print('imagelist',imagelist)
+
+trainlist = list(map(lambda x: x[:-8], imagelist))
+#print('trainlist',list(trainlist))
+
 NAME = 'log01_dink34'
 BATCHSIZE_PER_CARD = 4
 
 solver = MyFrame(DinkNet34, dice_bce_loss, 2e-4)
-batchsize = torch.cuda.device_count() * BATCHSIZE_PER_CARD
+#batchsize = int(torch.cuda.device_count()/2) * BATCHSIZE_PER_CARD
+batchsize=16
+#print('torch.cuda.device_count(): ',torch.cuda.device_count())
 
-dataset = ImageFolder(trainlist, ROOT)
+dataset = ImageFolder(trainlist, str(data_dir))
+
+#print("dataset: ",dataset)
 data_loader = torch.utils.data.DataLoader(
     dataset,
     batch_size=batchsize,
     shuffle=True,
-    num_workers=4)
+    num_workers=2)
 
-mylog = open('logs/'+NAME+'.log','w')
 tic = time()
 no_optim = 0
 total_epoch = 300
@@ -46,11 +63,13 @@ train_loss_array = np.array([])
 for epoch in range(1, total_epoch + 1):
     data_loader_iter = iter(data_loader)
     train_epoch_loss = 0
+    print('start epoch {}'.format(epoch))
     for img, mask in data_loader_iter:
         solver.set_input(img, mask)
         train_loss = solver.optimize()
         train_epoch_loss += train_loss
     train_epoch_loss /= len(data_loader_iter)   
+    print('train_epoch_loss: ',train_epoch_loss)
     train_cost_array = np.append(train_loss_array, train_epoch_loss)
     epochs = np.arange(epoch)
 
@@ -60,25 +79,26 @@ for epoch in range(1, total_epoch + 1):
     else:
         no_optim = 0
         train_epoch_best_loss = train_epoch_loss
-        solver.save('weights/'+NAME+'.th')
+        #solver.save('weights/'+NAME+'.th')
+        solver.save('weights/'+NAME+'.pt')
     if no_optim > 6:
-        print >> mylog, 'early stop at %d epoch' % epoch
-        print 'early stop at %d epoch' % epoch
+        print('early stop at {} epoch'.format(epoch))
         break
     if no_optim > 3:
         if solver.old_lr < 5e-7:
             break
+        #solver.load('weights/'+NAME+'.th')
         solver.load('weights/'+NAME+'.th')
         solver.update_lr(5.0, factor = True)
         
-uid = datatime.now().strftime("%Y_%m_%d-%I_%M_%S_%p") 
+uid = datetime.now().strftime("%Y_%m_%d-%I_%M_%S_%p") 
 mlflow.set_experiment('road test' + uid )
 
 mlflow.log_param("model_name", "D-LinkNet34")
 mlflow.log_param("dataset_name", "DeepGlobeRoad2019")
 mlflow.log_param("num_epochs", epochs)
 mlflow.log_param("optimizer_name", "ADAM")
-mlflow.log_param("loss_func_name", "BCEloss)
+mlflow.log_param("loss_func_name", "BCEloss")
 mlflow.log_param("init learn_rate", "2e-4")
 mlflow.log_param("input_dims", SHAPE)
 mlflow.log_param("batch_size", batchsize)
@@ -97,5 +117,5 @@ plt.savefig(save_path[:-4] + ".png")
 mlflow.log_artifact(save_path[:-4] + ".png")
 plt.close()
 
-print 'Finish!'
+print('Finish!')
 

@@ -6,9 +6,12 @@ import cv2
 import numpy as np
 
 class MyFrame():
-    def __init__(self, net, loss, lr=2e-4, evalmode = False):
-        self.net = net().cuda()
-        self.net = torch.nn.DataParallel(self.net, device_ids=range(torch.cuda.device_count()))
+    def __init__(self, net, loss, lr=2e-4, evalmode = False):      
+        self.net = net()
+        device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
+        self.net.to(device)
+        #self.net = net().cuda()
+        self.net = torch.nn.DataParallel(self.net, device_ids=range(torch.cuda.device_count()-2))
         self.optimizer = torch.optim.Adam(params=self.net.parameters(), lr=lr)
         #self.optimizer = torch.optim.RMSprop(params=self.net.parameters(), lr=lr)
         self.loss = loss()
@@ -63,7 +66,7 @@ class MyFrame():
         loss = self.loss(self.mask, pred)
         loss.backward()
         self.optimizer.step()
-        return loss.data[0]
+        return loss.item()
         
     def save(self, path):
         torch.save(self.net.state_dict(), path)

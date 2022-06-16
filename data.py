@@ -84,13 +84,14 @@ def randomVerticleFlip(image, mask, u=0.5):
 def randomRotate90(image, mask, u=0.5):
     if np.random.random() < u:
         image=np.rot90(image)
-        mask=np.rot90(mask)
+        #print(type(mask))
+        mask=np.rot90(mask, k=1, axes=(0,1))
 
     return image, mask
 
 def default_loader(id, root):
     img = cv2.imread(os.path.join(root,'{}_sat.jpg').format(id))
-    mask = cv2.imread(os.path.join(root+'{}_mask.png').format(id), cv2.IMREAD_GRAYSCALE)
+    mask = cv2.imread(os.path.join(root,'{}_mask.png').format(id), cv2.IMREAD_GRAYSCALE)
     
     img = randomHueSaturationValue(img,
                                    hue_shift_limit=(-30, 30),
@@ -129,4 +130,5 @@ class ImageFolder(data.Dataset):
         return img, mask
 
     def __len__(self):
+        #print("len: ", len(self.ids))
         return len(self.ids)
