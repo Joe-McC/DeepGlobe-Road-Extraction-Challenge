@@ -8,6 +8,7 @@ import os
 import numpy as np
 
 from time import time
+from datetime import datetime
 
 from networks.unet import Unet
 from networks.dunet import Dunet
@@ -38,6 +39,10 @@ tic = time()
 no_optim = 0
 total_epoch = 300
 train_epoch_best_loss = 100.
+
+# Create a numer of empty arrays and variables for updating during training.
+train_loss_array = np.array([])
+
 for epoch in range(1, total_epoch + 1):
     data_loader_iter = iter(data_loader)
     train_epoch_loss = 0
@@ -45,16 +50,11 @@ for epoch in range(1, total_epoch + 1):
         solver.set_input(img, mask)
         train_loss = solver.optimize()
         train_epoch_loss += train_loss
-    train_epoch_loss /= len(data_loader_iter)
-    print >> mylog, '********'
-    print >> mylog, 'epoch:',epoch,'    time:',int(time()-tic)
-    print >> mylog, 'train_loss:',train_epoch_loss
-    print >> mylog, 'SHAPE:',SHAPE
-    print '********'
-    print 'epoch:',epoch,'    time:',int(time()-tic)
-    print 'train_loss:',train_epoch_loss
-    print 'SHAPE:',SHAPE
-    
+    train_epoch_loss /= len(data_loader_iter)   
+    train_cost_array = np.append(train_loss_array, train_epoch_loss)
+    epochs = np.arange(epoch)
+
+        
     if train_epoch_loss >= train_epoch_best_loss:
         no_optim += 1
     else:
@@ -69,9 +69,33 @@ for epoch in range(1, total_epoch + 1):
         if solver.old_lr < 5e-7:
             break
         solver.load('weights/'+NAME+'.th')
-        solver.update_lr(5.0, factor = True, mylog = mylog)
-    mylog.flush()
-    
-print >> mylog, 'Finish!'
+        solver.update_lr(5.0, factor = True)
+        
+uid = datatime.now().strftime("%Y_%m_%d-%I_%M_%S_%p") 
+mlflow.set_experiment('road test' + uid )
+
+mlflow.log_param("model_name", "D-LinkNet34")
+mlflow.log_param("dataset_name", "DeepGlobeRoad2019")
+mlflow.log_param("num_epochs", epochs)
+mlflow.log_param("optimizer_name", "ADAM")
+mlflow.log_param("loss_func_name", "BCEloss)
+mlflow.log_param("init learn_rate", "2e-4")
+mlflow.log_param("input_dims", SHAPE)
+mlflow.log_param("batch_size", batchsize)
+mlflow.setbatchsize
+
+#plot the error of each class per epoch for training and validation
+epochs = np.arange(len(training_cost))
+plt.figure(1)
+plt.plot(epochs, training_cost, 'b-')
+plt.plot(epochs, validation_cost, 'r-')
+plt.plot(epochs, error_rates, 'g-')
+plt.legend(['Training Cost', 'Validation Cost', 'Error Rate'], loc='upper right')
+plt.xlabel('Epoch Number')
+plt.ylabel('Cost Function Value & Error Rate')
+plt.savefig(save_path[:-4] + ".png")
+mlflow.log_artifact(save_path[:-4] + ".png")
+plt.close()
+
 print 'Finish!'
-mylog.close()
+
