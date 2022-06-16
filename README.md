@@ -1,12 +1,8 @@
 # DeepGlobe-Road-Extraction-Challenge
 Code for the 1st place solution in [DeepGlobe Road Extraction Challenge](https://competitions.codalab.org/competitions/18467).
 
-# Requirements
+This fork contains updated code and an conda environment.yml file to allow for use with Python 3 and updated pytorch versions. 
 
-- Cuda 8.0
-- Python 2.7
-- Pytorch 0.2.0
-- cv2
 
 # Usage
 
@@ -14,6 +10,9 @@ Code for the 1st place solution in [DeepGlobe Road Extraction Challenge](https:/
 Place '*train*', '*valid*' and '*test*' data folders in the '*dataset*' folder.
 
 Data is from [DeepGlobe Road Extraction Challenge](https://competitions.codalab.org/competitions/18467#participate-get_starting_kit). You should sign in first to get the data.
+
+### Env 
+- Setup Conda env using ```conda env create -f envrionment.yml```
 
 ### Train
 - Run `python train.py` to train the default D-LinkNet34.
