@@ -24,8 +24,6 @@ from framework import MyFrame
 from loss import dice_bce_loss
 from data import ImageFolder
 
-import mlflow
-import dvc.api
 
 shape = (1024,1024)
 #current_dir = 
@@ -93,52 +91,8 @@ for epoch in range(1, total_epoch + 1):
             break
         #solver.load('weights/'+NAME+'.th')
         solver.load(chkpt_file)
-        solver.update_lr(5.0, factor = True)
-        
-path = 'dataset/'
-repo = '/home/josephmccooey/dev/DeepGlobe-Road-Extraction-Challenge/'
-version = 'initial_test' # commit branch
+        solver.update_lr(5.0, factor = True)            
 
-data_url = dvc.api.get_url(
-    path = path,
-    repo = repo,
-    rev = version
-    )
-    
-    
-mlflow.set_tracking_uri("file:///mnt/71842a84-83a5-4280-8a42-6d352ad33656/Deep-Learning/data/alt-nav/aerial/mlflow_tracking")
-        
-uid = datetime.now().strftime("%Y_%m_%d-%I_%M_%S_%p") 
-mlflow.set_experiment('road_test_' + uid )
-
-mlflow.log_param("model_name", "D-LinkNet34")
-mlflow.log_param("dataset_name", "DeepGlobeRoad2019")
-mlflow.log_param("remote_dvc_url", data_url)
-mlflow.log_param("git repo", 'git@gitlab.mira.co.uk:JosephMcCooey/deep-globe-extraction-challenge.git')
-mlflow.log_param("git branch", 'initial_test')
-mlflow.log_param("num_epochs", epochs)
-mlflow.log_param("optimizer_name", "ADAM")
-mlflow.log_param("loss_func_name", "BCEloss")
-mlflow.log_param("init learn_rate", "2e-4")
-mlflow.log_param("input_dims", shape)
-mlflow.log_param("batch_size", batchsize)
-
-#plot the error of each class per epoch for training and validation
-epochs = np.arange(len(train_loss_array))
-plt.figure(1)
-plt.plot(epochs, train_loss_array, 'b-')
-#plt.plot(epochs, validation_cost, 'r-')
-#plt.plot(epochs, error_rates, 'g-')
-#plt.legend(['Training Cost', 'Validation Cost', 'Error Rate'], loc='upper right')
-plt.legend(['Training Cost'], loc='upper right')
-plt.xlabel('Epoch Number')
-plt.ylabel('Cost Function Value')
-
-#plt.savefig(save_path[:-4] + ".png")
-plt.savefig(plot_file)
-mlflow.log_artifact(plot_file)
-#mlflow.log_artifact(save_path[:-4] + ".png")
-plt.close()
 
 print('Finish!')
 
